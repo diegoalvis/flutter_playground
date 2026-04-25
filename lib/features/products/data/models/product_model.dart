@@ -1,6 +1,9 @@
+import 'package:drift/drift.dart';
+import 'package:equatable/equatable.dart';
+import 'package:flutter_playground/core/database/app_database.dart' as db;
 import 'package:flutter_playground/features/products/domain/entities/product.dart';
 
-class ProductModel {
+class ProductModel extends Equatable {
   final int id;
   final String title;
   final double price;
@@ -23,6 +26,14 @@ class ProductModel {
         thumbnail: json['thumbnail'] as String,
       );
 
+  factory ProductModel.fromDriftData(db.Product data) => ProductModel(
+        id: data.id,
+        title: data.title,
+        price: data.price,
+        description: data.description,
+        thumbnail: data.thumbnail,
+      );
+
   Product toEntity() => Product(
         id: id,
         title: title,
@@ -30,4 +41,15 @@ class ProductModel {
         description: description,
         thumbnail: thumbnail,
       );
+
+  db.ProductsCompanion toCompanion() => db.ProductsCompanion(
+        id: Value(id),
+        title: Value(title),
+        price: Value(price),
+        description: Value(description),
+        thumbnail: Value(thumbnail),
+      );
+
+  @override
+  List<Object?> get props => [id];
 }
