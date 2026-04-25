@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_playground/features/products/data/datasources/product_local_data_source.dart';
 import 'package:flutter_playground/features/products/data/datasources/product_remote_data_source.dart';
 import 'package:flutter_playground/features/products/data/models/product_model.dart';
@@ -12,7 +14,7 @@ class ProductRepositoryImpl implements ProductRepository {
 
   @override
   Stream<List<Product>> getProducts() {
-    _doSync(); // fire-and-forget
+    unawaited(_doSync()); // fire-and-forget
     return _local.watchAll().map(
           (items) => items.map(ProductModel.fromDriftData).map((m) => m.toEntity()).toList(),
         );
