@@ -26,9 +26,9 @@ void main() {
   test('insertAll and watchAll returns inserted products', () async {
     await dataSource.insertAll([tModel]);
 
-    final result = await dataSource.watchAll().first;
+    final result = await dataSource.watchAllProducts().first;
     expect(result.length, 1);
-    expect(result.first.id, 1);
+    expect(result.first.remoteId, 1);
     expect(result.first.title, 'Test Product');
   });
 
@@ -43,7 +43,7 @@ void main() {
     );
     await dataSource.insertAll([updated]);
 
-    final result = await dataSource.watchAll().first;
+    final result = await dataSource.watchAllProducts().first;
     expect(result.length, 1);
     expect(result.first.title, 'Updated');
   });
@@ -52,7 +52,7 @@ void main() {
     await dataSource.insertAll([tModel]);
 
     final result = await dataSource.getById(1);
-    expect(result.id, 1);
+    expect(result.remoteId, 1);
     expect(result.title, 'Test Product');
   });
 }

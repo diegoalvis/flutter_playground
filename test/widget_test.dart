@@ -1,30 +1,36 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:flutter_playground/features/products/domain/usecases/get_products.dart';
+import 'package:flutter_playground/features/products/domain/usecases/sync_products.dart';
+import 'package:flutter_playground/features/products/domain/usecases/get_product_detail.dart';
+import 'package:flutter_playground/features/products/presentation/bloc/product_list_bloc.dart';
+import 'package:flutter_playground/features/products/presentation/bloc/product_detail_bloc.dart';
+import 'package:flutter_playground/features/products/domain/repositories/product_repository.dart';
 import 'package:flutter_playground/main.dart';
 
+class MockProductRepository extends Mock implements ProductRepository {}
+
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('App smoke test — renders without crashing', (WidgetTester tester) async {
+    final repo = MockProductRepository();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    when(() => repo.getProducts()).thenAnswer((_) => const Stream.empty());
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    await tester.pumpWidget(
+      MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) => ProductListBloc(GetProducts(repo), SyncProducts(repo)),
+          ),
+          BlocProvider(
+            create: (_) => ProductDetailBloc(GetProductDetail(repo)),
+          ),
+        ],
+        child: const MyApp(),
+      ),
+    );
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.byType(MyApp), findsOneWidget);
   });
 }

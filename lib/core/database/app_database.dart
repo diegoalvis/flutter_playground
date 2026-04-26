@@ -4,14 +4,12 @@ import 'package:drift_flutter/drift_flutter.dart';
 part 'app_database.g.dart';
 
 class Products extends Table {
-  IntColumn get id => integer()();
+  IntColumn get internalId => integer().autoIncrement()();
+  IntColumn get remoteId => integer().unique()();
   TextColumn get title => text()();
   RealColumn get price => real()();
   TextColumn get description => text()();
   TextColumn get thumbnail => text()();
-
-  @override
-  Set<Column> get primaryKey => {id};
 }
 
 @DriftDatabase(tables: [Products])

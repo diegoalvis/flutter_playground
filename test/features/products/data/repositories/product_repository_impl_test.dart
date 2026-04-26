@@ -24,7 +24,8 @@ void main() {
   );
 
   final tDriftData = db.Product(
-    id: 1,
+    internalId: 1,
+    remoteId: 1,
     title: 'Test',
     price: 9.99,
     description: 'Desc',
@@ -50,7 +51,7 @@ void main() {
       when(() => mockRemote.fetchProducts())
           .thenAnswer((_) async => [tModel]);
       when(() => mockLocal.insertAll(any())).thenAnswer((_) async {});
-      when(() => mockLocal.watchAll())
+      when(() => mockLocal.watchAllProducts())
           .thenAnswer((_) => Stream.value([tDriftData]));
 
       final stream = repository.getProducts();

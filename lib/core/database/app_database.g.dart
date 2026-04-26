@@ -8,14 +8,32 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $ProductsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  static const VerificationMeta _internalIdMeta = const VerificationMeta(
+    'internalId',
+  );
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
+  late final GeneratedColumn<int> internalId = GeneratedColumn<int>(
+    'internal_id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
+    'remoteId',
+  );
+  @override
+  late final GeneratedColumn<int> remoteId = GeneratedColumn<int>(
+    'remote_id',
     aliasedName,
     false,
     type: DriftSqlType.int,
-    requiredDuringInsert: false,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
   );
   static const VerificationMeta _titleMeta = const VerificationMeta('title');
   @override
@@ -59,7 +77,8 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
   );
   @override
   List<GeneratedColumn> get $columns => [
-    id,
+    internalId,
+    remoteId,
     title,
     price,
     description,
@@ -77,8 +96,19 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    if (data.containsKey('internal_id')) {
+      context.handle(
+        _internalIdMeta,
+        internalId.isAcceptableOrUnknown(data['internal_id']!, _internalIdMeta),
+      );
+    }
+    if (data.containsKey('remote_id')) {
+      context.handle(
+        _remoteIdMeta,
+        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_remoteIdMeta);
     }
     if (data.containsKey('title')) {
       context.handle(
@@ -119,14 +149,18 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {id};
+  Set<GeneratedColumn> get $primaryKey => {internalId};
   @override
   Product map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Product(
-      id: attachedDatabase.typeMapping.read(
+      internalId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
-        data['${effectivePrefix}id'],
+        data['${effectivePrefix}internal_id'],
+      )!,
+      remoteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}remote_id'],
       )!,
       title: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -154,13 +188,15 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
 }
 
 class Product extends DataClass implements Insertable<Product> {
-  final int id;
+  final int internalId;
+  final int remoteId;
   final String title;
   final double price;
   final String description;
   final String thumbnail;
   const Product({
-    required this.id,
+    required this.internalId,
+    required this.remoteId,
     required this.title,
     required this.price,
     required this.description,
@@ -169,7 +205,8 @@ class Product extends DataClass implements Insertable<Product> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['internal_id'] = Variable<int>(internalId);
+    map['remote_id'] = Variable<int>(remoteId);
     map['title'] = Variable<String>(title);
     map['price'] = Variable<double>(price);
     map['description'] = Variable<String>(description);
@@ -179,7 +216,8 @@ class Product extends DataClass implements Insertable<Product> {
 
   ProductsCompanion toCompanion(bool nullToAbsent) {
     return ProductsCompanion(
-      id: Value(id),
+      internalId: Value(internalId),
+      remoteId: Value(remoteId),
       title: Value(title),
       price: Value(price),
       description: Value(description),
@@ -193,7 +231,8 @@ class Product extends DataClass implements Insertable<Product> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Product(
-      id: serializer.fromJson<int>(json['id']),
+      internalId: serializer.fromJson<int>(json['internalId']),
+      remoteId: serializer.fromJson<int>(json['remoteId']),
       title: serializer.fromJson<String>(json['title']),
       price: serializer.fromJson<double>(json['price']),
       description: serializer.fromJson<String>(json['description']),
@@ -204,7 +243,8 @@ class Product extends DataClass implements Insertable<Product> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'internalId': serializer.toJson<int>(internalId),
+      'remoteId': serializer.toJson<int>(remoteId),
       'title': serializer.toJson<String>(title),
       'price': serializer.toJson<double>(price),
       'description': serializer.toJson<String>(description),
@@ -213,13 +253,15 @@ class Product extends DataClass implements Insertable<Product> {
   }
 
   Product copyWith({
-    int? id,
+    int? internalId,
+    int? remoteId,
     String? title,
     double? price,
     String? description,
     String? thumbnail,
   }) => Product(
-    id: id ?? this.id,
+    internalId: internalId ?? this.internalId,
+    remoteId: remoteId ?? this.remoteId,
     title: title ?? this.title,
     price: price ?? this.price,
     description: description ?? this.description,
@@ -227,7 +269,10 @@ class Product extends DataClass implements Insertable<Product> {
   );
   Product copyWithCompanion(ProductsCompanion data) {
     return Product(
-      id: data.id.present ? data.id.value : this.id,
+      internalId: data.internalId.present
+          ? data.internalId.value
+          : this.internalId,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
       title: data.title.present ? data.title.value : this.title,
       price: data.price.present ? data.price.value : this.price,
       description: data.description.present
@@ -240,7 +285,8 @@ class Product extends DataClass implements Insertable<Product> {
   @override
   String toString() {
     return (StringBuffer('Product(')
-          ..write('id: $id, ')
+          ..write('internalId: $internalId, ')
+          ..write('remoteId: $remoteId, ')
           ..write('title: $title, ')
           ..write('price: $price, ')
           ..write('description: $description, ')
@@ -250,12 +296,14 @@ class Product extends DataClass implements Insertable<Product> {
   }
 
   @override
-  int get hashCode => Object.hash(id, title, price, description, thumbnail);
+  int get hashCode =>
+      Object.hash(internalId, remoteId, title, price, description, thumbnail);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Product &&
-          other.id == this.id &&
+          other.internalId == this.internalId &&
+          other.remoteId == this.remoteId &&
           other.title == this.title &&
           other.price == this.price &&
           other.description == this.description &&
@@ -263,37 +311,43 @@ class Product extends DataClass implements Insertable<Product> {
 }
 
 class ProductsCompanion extends UpdateCompanion<Product> {
-  final Value<int> id;
+  final Value<int> internalId;
+  final Value<int> remoteId;
   final Value<String> title;
   final Value<double> price;
   final Value<String> description;
   final Value<String> thumbnail;
   const ProductsCompanion({
-    this.id = const Value.absent(),
+    this.internalId = const Value.absent(),
+    this.remoteId = const Value.absent(),
     this.title = const Value.absent(),
     this.price = const Value.absent(),
     this.description = const Value.absent(),
     this.thumbnail = const Value.absent(),
   });
   ProductsCompanion.insert({
-    this.id = const Value.absent(),
+    this.internalId = const Value.absent(),
+    required int remoteId,
     required String title,
     required double price,
     required String description,
     required String thumbnail,
-  }) : title = Value(title),
+  }) : remoteId = Value(remoteId),
+       title = Value(title),
        price = Value(price),
        description = Value(description),
        thumbnail = Value(thumbnail);
   static Insertable<Product> custom({
-    Expression<int>? id,
+    Expression<int>? internalId,
+    Expression<int>? remoteId,
     Expression<String>? title,
     Expression<double>? price,
     Expression<String>? description,
     Expression<String>? thumbnail,
   }) {
     return RawValuesInsertable({
-      if (id != null) 'id': id,
+      if (internalId != null) 'internal_id': internalId,
+      if (remoteId != null) 'remote_id': remoteId,
       if (title != null) 'title': title,
       if (price != null) 'price': price,
       if (description != null) 'description': description,
@@ -302,14 +356,16 @@ class ProductsCompanion extends UpdateCompanion<Product> {
   }
 
   ProductsCompanion copyWith({
-    Value<int>? id,
+    Value<int>? internalId,
+    Value<int>? remoteId,
     Value<String>? title,
     Value<double>? price,
     Value<String>? description,
     Value<String>? thumbnail,
   }) {
     return ProductsCompanion(
-      id: id ?? this.id,
+      internalId: internalId ?? this.internalId,
+      remoteId: remoteId ?? this.remoteId,
       title: title ?? this.title,
       price: price ?? this.price,
       description: description ?? this.description,
@@ -320,8 +376,11 @@ class ProductsCompanion extends UpdateCompanion<Product> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
+    if (internalId.present) {
+      map['internal_id'] = Variable<int>(internalId.value);
+    }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<int>(remoteId.value);
     }
     if (title.present) {
       map['title'] = Variable<String>(title.value);
@@ -341,7 +400,8 @@ class ProductsCompanion extends UpdateCompanion<Product> {
   @override
   String toString() {
     return (StringBuffer('ProductsCompanion(')
-          ..write('id: $id, ')
+          ..write('internalId: $internalId, ')
+          ..write('remoteId: $remoteId, ')
           ..write('title: $title, ')
           ..write('price: $price, ')
           ..write('description: $description, ')
@@ -364,7 +424,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
 
 typedef $$ProductsTableCreateCompanionBuilder =
     ProductsCompanion Function({
-      Value<int> id,
+      Value<int> internalId,
+      required int remoteId,
       required String title,
       required double price,
       required String description,
@@ -372,7 +433,8 @@ typedef $$ProductsTableCreateCompanionBuilder =
     });
 typedef $$ProductsTableUpdateCompanionBuilder =
     ProductsCompanion Function({
-      Value<int> id,
+      Value<int> internalId,
+      Value<int> remoteId,
       Value<String> title,
       Value<double> price,
       Value<String> description,
@@ -388,8 +450,13 @@ class $$ProductsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
+  ColumnFilters<int> get internalId => $composableBuilder(
+    column: $table.internalId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get remoteId => $composableBuilder(
+    column: $table.remoteId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -423,8 +490,13 @@ class $$ProductsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
+  ColumnOrderings<int> get internalId => $composableBuilder(
+    column: $table.internalId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get remoteId => $composableBuilder(
+    column: $table.remoteId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -458,8 +530,13 @@ class $$ProductsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get internalId => $composableBuilder(
+    column: $table.internalId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
 
   GeneratedColumn<String> get title =>
       $composableBuilder(column: $table.title, builder: (column) => column);
@@ -504,13 +581,15 @@ class $$ProductsTableTableManager
               $$ProductsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<int> internalId = const Value.absent(),
+                Value<int> remoteId = const Value.absent(),
                 Value<String> title = const Value.absent(),
                 Value<double> price = const Value.absent(),
                 Value<String> description = const Value.absent(),
                 Value<String> thumbnail = const Value.absent(),
               }) => ProductsCompanion(
-                id: id,
+                internalId: internalId,
+                remoteId: remoteId,
                 title: title,
                 price: price,
                 description: description,
@@ -518,13 +597,15 @@ class $$ProductsTableTableManager
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<int> internalId = const Value.absent(),
+                required int remoteId,
                 required String title,
                 required double price,
                 required String description,
                 required String thumbnail,
               }) => ProductsCompanion.insert(
-                id: id,
+                internalId: internalId,
+                remoteId: remoteId,
                 title: title,
                 price: price,
                 description: description,
