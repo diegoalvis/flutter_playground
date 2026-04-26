@@ -23,6 +23,6 @@ class ProductLocalDataSource {
   }
 
   Future<db.Product> getById(int id) {
-    return (_db.select(_db.products)..where((p) => p.internalId.equals(id))).getSingle();
+    return (_db.select(_db.products)..where((p) => p.remoteId.equals(id))).getSingle();
   }
 }
