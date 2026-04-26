@@ -15,7 +15,7 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Stream<List<Product>> getProducts() {
     unawaited(_doSync()); // fire-and-forget
-    return _local.watchAll().map(
+    return _local.watchAllProducts().map(
           (items) => items.map(ProductModel.fromDriftData).map((m) => m.toEntity()).toList(),
         );
   }

@@ -27,7 +27,7 @@ class ProductModel extends Equatable {
       );
 
   factory ProductModel.fromDriftData(db.Product data) => ProductModel(
-        id: data.id,
+        id: data.remoteId,
         title: data.title,
         price: data.price,
         description: data.description,
@@ -43,7 +43,7 @@ class ProductModel extends Equatable {
       );
 
   db.ProductsCompanion toCompanion() => db.ProductsCompanion(
-        id: Value(id),
+        remoteId: Value(id),
         title: Value(title),
         price: Value(price),
         description: Value(description),
